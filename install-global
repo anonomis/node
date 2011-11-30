@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Download and install node, snowfish version
+#
+# Author: Thomas Frössman  ( thomasf@jossystem.se / http://thomas.jossystem.se )
+# Updates to this file will probably be available at https://github.com/thomasf/dotfiles/
+#
+
+#set -x
+set -e
+
+git pull upstream v0.6
+mkdir -p ~/.node
+./configure
+make -j8
+sudo make install
+curl http://npmjs.org/install.sh | sudo sh
+git push origin mynode
