@@ -19,25 +19,34 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = require('util');
 
-var sysWarning;
-if (!sysWarning) {
-  sysWarning = 'The "sys" module is now called "util". ' +
-               'It should have a similar interface.';
-  if (process.env.NODE_DEBUG && process.env.NODE_DEBUG.indexOf('sys') != -1)
-    console.trace(sysWarning);
-  else
-    console.error(sysWarning);
+
+
+var common = require('../common');
+var assert = require('assert');
+
+try {
+  var crypto = require('crypto');
+} catch (e) {
+  console.log('Not compiled with OPENSSL support.');
+  process.exit();
 }
 
-exports.print = util.print;
-exports.puts = util.puts;
-exports.debug = util.debug;
-exports.error = util.error;
-exports.inspect = util.inspect;
-exports.p = util.p;
-exports.log = util.log;
-exports.exec = util.exec;
-exports.pump = util.pump;
-exports.inherits = util.inherits;
+// Testing whether EVP_CipherInit_ex is functioning correctly.
+// Reference: bug#1997
+
+(function()
+{
+  var encrypt = crypto.createCipheriv('BF-ECB', 'SomeRandomBlahz0c5GZVnR', '');
+  var hex = encrypt.update('Hello World!', 'ascii', 'hex');
+  hex += encrypt.final('hex');
+  assert.equal(hex.toUpperCase(), '6D385F424AAB0CFBF0BB86E07FFB7D71');
+}());
+
+(function()
+{
+  var decrypt = crypto.createDecipheriv('BF-ECB', 'SomeRandomBlahz0c5GZVnR', '');
+  var msg = decrypt.update('6D385F424AAB0CFBF0BB86E07FFB7D71', 'hex', 'ascii');
+  msg += decrypt.final('ascii');
+  assert.equal(msg, 'Hello World!');
+}());
