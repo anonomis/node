@@ -19,21 +19,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var common = require('../common');
-var assert = require('assert');
-
-var TCP = process.binding('tcp_wrap').TCP;
-
-var handle = new TCP();
-
-// Should be able to bind to the common.PORT
-var r = handle.bind('0.0.0.0', common.PORT);
-assert.equal(0, r);
-
-// Should not be able to bind to the same port again
-var r = handle.bind('0.0.0.0', common.PORT);
-assert.equal(-1, r);
-console.log(errno);
-assert.equal(errno, 'EINVAL');
-
-handle.close();
+// This tests that pausing and resuming stdin does not hang and timeout
+// when done in a child process.  See test/simple/test-stdin-pause-resume.js
+var child_process = require('child_process');
+var path = require('path');
+child_process.spawn(process.execPath,
+                    [ path.resolve(__dirname, 'test-stdin-pause-resume.js') ]);
