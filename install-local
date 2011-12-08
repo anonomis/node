@@ -9,9 +9,10 @@
 #set -x
 set -e
 
+git pull origin mynode
 git pull upstream v0.6
 mkdir -p ~/.node
-./configure --prefix=~/.node
+./configure --prefix=~/.node --without-npm
 make -j8
 make install
 curl http://npmjs.org/install.sh | sh

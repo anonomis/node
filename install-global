@@ -9,7 +9,7 @@
 #set -x
 set -e
 
-./configure
+./configure --without-npm
 make -j8
 sudo make install
 curl http://npmjs.org/install.sh | sudo sh
