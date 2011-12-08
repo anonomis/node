@@ -8,7 +8,7 @@
 
 #set -x
 set -e
-
+git pull origin mynode
 ./configure --without-npm
 make -j8
 sudo make install
