@@ -6,10 +6,8 @@
 # Updates to this file will probably be available at https://github.com/thomasf/dotfiles/
 #
 
-#set -x
 set -e
 git pull origin mynode
-./configure --without-npm
+./configure
 make -j8
 sudo make install
-curl http://npmjs.org/install.sh | sudo sh
