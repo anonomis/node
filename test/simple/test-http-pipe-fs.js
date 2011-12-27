@@ -22,47 +22,47 @@
 var common = require('../common');
 var assert = require('assert');
 var http = require('http');
+var fs = require('fs');
+var path = require('path');
 
-var body = 'hello world\n';
+var file = path.join(common.tmpDir, 'http-pipe-fs-test.txt');
+var requests = 0;
 
 var server = http.createServer(function(req, res) {
-  res.writeHead(200, {'Content-Length': body.length});
-  res.write(body);
-  res.end();
-});
-
-var connectCount = 0;
-var name = 'localhost:' + common.PORT;
-var agent = new http.Agent({maxSockets: 1});
-var headers = {'connection': 'keep-alive'};
-
-server.listen(common.PORT, function() {
-  http.get({
-    path: '/', headers: headers, port: common.PORT, agent: agent
-  }, function(response) {
-    assert.equal(agent.sockets[name].length, 1);
-    assert.equal(agent.requests[name].length, 2);
+  ++requests;
+  var stream = fs.createWriteStream(file);
+  req.pipe(stream);
+  stream.on('close', function() {
+    res.writeHead(200);
+    res.end();
   });
+}).listen(common.PORT, function() {
+  http.globalAgent.maxSockets = 1;
 
-  http.get({
-    path: '/', headers: headers, port: common.PORT, agent: agent
-  }, function(response) {
-    assert.equal(agent.sockets[name].length, 1);
-    assert.equal(agent.requests[name].length, 1);
-  });
-
-  http.get({
-    path: '/', headers: headers, port: common.PORT, agent: agent
-  }, function(response) {
-    response.on('end', function() {
-      assert.equal(agent.sockets[name].length, 1);
-      assert(!agent.requests.hasOwnProperty(name));
-      server.close();
-    });
-  });
+  for (var i = 0; i < 2; ++i) {
+    (function(i) {
+      var req = http.request({
+        port: common.PORT,
+        method: 'POST',
+        headers: {
+          'Content-Length': 5
+        }
+      }, function(res) {
+        res.on('end', function() {
+          common.debug('res' + i + ' end');
+          if (i === 2) {
+            server.close();
+          }
+        });
+      });
+      req.on('socket', function(s) {
+        common.debug('req' + i + ' start');
+      });
+      req.end('12345');
+    }(i + 1));
+  }
 });
 
 process.on('exit', function() {
-  assert(!agent.sockets.hasOwnProperty(name));
-  assert(!agent.requests.hasOwnProperty(name));
+  assert.equal(requests, 2);
 });
